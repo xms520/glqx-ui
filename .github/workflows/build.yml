@@ -1,0 +1,41 @@
+name: build-glqxui-dylib
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'GLQXUI.m'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build GLQXUI.dylib (arm64, no theos)
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "SDK: $SDK"
+          xcrun -sdk iphoneos clang \
+            -arch arm64 \
+            -miphoneos-version-min=15.0 \
+            -framework Foundation \
+            -framework UIKit \
+            -framework CoreGraphics \
+            -framework QuartzCore \
+            -dynamiclib \
+            -fobjc-arc \
+            -O2 \
+            -Wall \
+            -o GLQXUI.dylib \
+            GLQXUI.m
+          file GLQXUI.dylib
+          ls -la GLQXUI.dylib
+          md5 GLQXUI.dylib
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GLQXUI.dylib
+          path: GLQXUI.dylib

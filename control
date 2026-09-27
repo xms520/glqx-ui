@@ -1,0 +1,6 @@
+Package: com.kun.glqxui
+Name: GLQXUI
+Version: 1.0
+Architecture: iphoneos-arm64
+Description: 纯 UI 壳：悬浮球 + 面板（零功能，昆哥儿科技）
+Author: 昆哥儿科技
