@@ -88,7 +88,7 @@ static void mx_refreshButtons(void) {
 
 static void mx_applyButtonStyle(UIButton *b, BOOL on, int spdIdx) {
     // 胶囊钮底色：OFF 深灰 / ON（秒杀/无敌）绿 / ON（加速）金
-    if (spdIdx > 0 && [b.tag intValue] == 2)
+    if (spdIdx > 0 && b.tag == 2)
         b.backgroundColor = [UIColor colorWithRed:1 green:0.6 blue:0 alpha:0.9];
     else if (on)
         b.backgroundColor = [UIColor colorWithRed:0.15 green:0.75 blue:0.35 alpha:0.9];
