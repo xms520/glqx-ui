@@ -139,7 +139,7 @@ static void mx_applyButtonStyle(UIButton *b, BOOL on, int spdIdx) {
         [self addSubview:x];
 
         // 开关行：左侧名称 / 右侧开关钮（圆角 24pt 胶囊，绿=ON 灰=OFF）
-        static NSString * const kNames[3] = {"💀 秒杀", "🛡 无敌", "⏩ 加速"};
+        static NSString * const kNames[3] = {@"💀 秒杀", @"🛡 无敌", @"⏩ 加速"};
         CGFloat y = 66;
         for (int i = 0; i < 3; i++) {
             UILabel *name = [[UILabel alloc] initWithFrame:CGRectMake(16, y, 100, 42)];
