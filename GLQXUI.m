@@ -78,12 +78,22 @@ static int g_kill = 0, g_inv = 0, g_spdIdx = 0;
 static const int kSpdVal[4] = {1, 2, 4, 8};
 
 static void mx_refreshButtons(void) {
-    g_btnKill.text = g_kill ? @"💀 秒杀  ON" : @"💀 秒杀  OFF";
-    g_btnKill.textColor = g_kill ? [UIColor colorWithRed:0.3 green:1 blue:0.4 alpha:1] : UIColor.lightGrayColor;
-    g_btnInv.text = g_inv ? @"🛡 无敌  ON" : @"🛡 无敌  OFF";
-    g_btnInv.textColor = g_inv ? [UIColor colorWithRed:0.3 green:1 blue:0.4 alpha:1] : UIColor.lightGrayColor;
-    g_btnSpd.text = g_spdIdx == 0 ? @"⏩ 加速  OFF" : [NSString stringWithFormat:@"⏩ 加速  x%d", kSpdVal[g_spdIdx]];
-    g_btnSpd.textColor = g_spdIdx ? [UIColor colorWithRed:1 green:0.8 blue:0.2 alpha:1] : UIColor.lightGrayColor;
+    g_btnKill.text = g_kill ? @"ON" : @"OFF";
+    g_btnKill.textColor = g_kill ? [UIColor whiteColor] : [UIColor colorWithWhite:0.4 alpha:1];
+    g_btnInv.text = g_inv ? @"ON" : @"OFF";
+    g_btnInv.textColor = g_inv ? [UIColor whiteColor] : [UIColor colorWithWhite:0.4 alpha:1];
+    g_btnSpd.text = g_spdIdx == 0 ? @"OFF" : [NSString stringWithFormat:@"x%d", kSpdVal[g_spdIdx]];
+    g_btnSpd.textColor = g_spdIdx ? [UIColor whiteColor] : [UIColor colorWithWhite:0.4 alpha:1];
+}
+
+static void mx_applyButtonStyle(UIButton *b, BOOL on, int spdIdx) {
+    // 胶囊钮底色：OFF 深灰 / ON（秒杀/无敌）绿 / ON（加速）金
+    if (spdIdx > 0 && [b.tag intValue] == 2)
+        b.backgroundColor = [UIColor colorWithRed:1 green:0.6 blue:0 alpha:0.9];
+    else if (on)
+        b.backgroundColor = [UIColor colorWithRed:0.15 green:0.75 blue:0.35 alpha:0.9];
+    else
+        b.backgroundColor = [UIColor colorWithWhite:1 alpha:0.12];
 }
 
 @interface MXBox : UIView
@@ -128,16 +138,24 @@ static void mx_refreshButtons(void) {
         [x addTarget:self action:@selector(closeTap) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:x];
 
+        // 开关行：左侧名称 / 右侧开关钮（圆角 24pt 胶囊，绿=ON 灰=OFF）
+        static NSString * const kNames[3] = {"💀 秒杀", "🛡 无敌", "⏩ 加速"};
         CGFloat y = 66;
         for (int i = 0; i < 3; i++) {
+            UILabel *name = [[UILabel alloc] initWithFrame:CGRectMake(16, y, 100, 42)];
+            name.text = kNames[i];
+            name.textColor = [UIColor colorWithWhite:1 alpha:0.85];
+            name.font = [UIFont systemFontOfSize:15];
+            [self addSubview:name];
+
             UIButton *b = [UIButton buttonWithType:UIButtonTypeCustom];
-            b.frame = CGRectMake(16, y, f.size.width - 32, 42);
-            b.backgroundColor = [UIColor colorWithWhite:1 alpha:0.07];
-            b.layer.cornerRadius = 10;
+            b.frame = CGRectMake(f.size.width - 16 - 76, y, 76, 42);
+            b.layer.cornerRadius = 21;
             b.titleLabel.font = [UIFont boldSystemFontOfSize:14];
             b.tag = i;
             [b addTarget:self action:@selector(btnTap:) forControlEvents:UIControlEventTouchUpInside];
             [self addSubview:b];
+
             UILabel *l = [[UILabel alloc] initWithFrame:b.bounds];
             l.textAlignment = NSTextAlignmentCenter;
             l.userInteractionEnabled = NO;
@@ -147,6 +165,8 @@ static void mx_refreshButtons(void) {
             if (i == 2) g_btnSpd = l;
             y += 50;
         }
+        for (UIView *v in self.subviews)
+            if ([v isKindOfClass:[UIButton class]]) mx_applyButtonStyle((UIButton *)v, v.tag==0?g_kill:(v.tag==1?g_inv:g_spdIdx>0), g_spdIdx);
         mx_refreshButtons();
 
         UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(drag:)];
@@ -164,6 +184,8 @@ static void mx_refreshButtons(void) {
     if (b.tag == 1) g_inv = !g_inv;
     if (b.tag == 2) g_spdIdx = (g_spdIdx + 1) % 4;
     mx_refreshButtons();
+    for (UIView *v in self.subviews)
+        if ([v isKindOfClass:[UIButton class]]) mx_applyButtonStyle((UIButton *)v, v.tag==0?g_kill:(v.tag==1?g_inv:g_spdIdx>0), g_spdIdx);
     // ★ 功能挂载点：在此读取 g_kill / g_inv / kSpdVal[g_spdIdx] 接业务逻辑
     uilog(@"btn tap %d -> kill=%d inv=%d spd=%d", (int)b.tag, g_kill, g_inv, kSpdVal[g_spdIdx]);
 }
@@ -234,7 +256,7 @@ static void mx_ensure_overlay(void) {
         if (g_ball.frame.size.width < 1) g_ball.frame = CGRectMake(0, 0, 58, 58);
         CGPoint old = g_ball.center;
         CGRect scr = w.bounds;
-        if (old.x < 1 && old.y < 1) g_ball.center = CGPointMake(scr.size.width - 57, scr.size.height * 0.42);
+        if (old.x < 1 && old.y < 1) g_ball.center = CGPointMake(scr.size.width - 57, scr.size.height * 0.28);
         [w addSubview:g_ball];
         [w bringSubviewToFront:g_ball];
         uilog(@"ball attached to game window (%.0fx%.0f) subviews=%lu", scr.size.width, scr.size.height, (unsigned long)w.subviews.count);
